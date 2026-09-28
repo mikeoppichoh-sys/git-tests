@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Transactions</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 20px; }
+        .panel { background: white; border-radius: 12px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08); padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+        th { background: #f8fafc; }
+        h1 { margin-bottom: 10px; }
+        a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <h1>Parking transaction history</h1>
+            <a href="/">Back to dashboard</a>
+            {% if history %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Plate</th>
+                            <th>Driver</th>
+                            <th>Vehicle</th>
+                            <th>Slot</th>
+                            <th>Entry</th>
+                            <th>Exit</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in history %}
+                            <tr>
+                                <td>{{ row.plate_number }}</td>
+                                <td>{{ row.driver_name }}</td>
+                                <td>{{ row.vehicle_type }}</td>
+                                <td>{{ row.slot_id }}</td>
+                                <td>{{ row.entry_time }}</td>
+                                <td>{{ row.exit_time or 'Still parked' }}</td>
+                                <td>KES {{ '%.2f' % (row.amount_paid or 0) }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No parking history has been recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

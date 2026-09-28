@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+{% block content %}
+<h2>History</h2>
+<form method="get" style="display:flex;gap:.6rem;margin-bottom:.9rem;align-items:center">
+  <input name="q" value="{{ q }}" placeholder="Search plate, driver or phone" aria-label="Search history">
+  <button>Search</button>
+  <a href="{{ url_for('export', q=q) }}" style="white-space:nowrap">Download CSV</a>
+</form>
+<div class="panel scroll">
+<table>
+<tr><th>Plate</th><th>Driver</th><th>Phone</th><th>Type</th><th>Slot</th><th>In</th><th>Out</th><th>Paid</th></tr>
+{% for t in history %}
+<tr><td>{{ t.plate_number }}</td><td>{{ t.driver_name }}</td><td>{{ t.phone_number }}</td><td>{{ t.vehicle_type }}</td><td>{{ t.slot_id }}</td>
+<td>{{ t.entry_time[:16]|replace('T',' ') }}</td>
+<td>{{ t.exit_time[:16]|replace('T',' ') if t.exit_time else 'Still parked' }}</td>
+<td>{{ 'KES {:,.0f}'.format(t.amount_paid) if t.exit_time else '-' }}</td></tr>
+{% else %}
+<tr><td colspan="8">No records match. Park a car from the lot page to start the history.</td></tr>
+{% endfor %}
+</table>
+</div>
+{% endblock %}

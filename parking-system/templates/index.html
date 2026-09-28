@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+{% set icons = {'car':'🚗','motorcycle':'🏍️','van':'🚐','truck':'🚚'} %}
+<style>
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem}
+.stats span{display:block;color:var(--muted);font-size:.85rem}
+.stats strong{font-size:1.6rem}
+.meter{height:8px;border-radius:4px;background:#2c343d;margin-top:.9rem;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--busy)}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.75rem;align-items:end}
+.lot{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem;background:#0e1115;padding:.9rem;border-radius:var(--r);border:1px solid #2c343d}
+.bay{min-height:170px;border:2px solid var(--line);border-top:0;border-radius:0 0 6px 6px;padding:.6rem;display:flex;flex-direction:column;gap:.3rem;position:relative}
+.bay .no{position:absolute;top:.5rem;right:.6rem;color:var(--muted);font-size:.85rem}
+.bay.free{border-color:#3f8f79}
+.bay.free .empty{margin:auto;color:var(--free)}
+.bay .car{font-size:1.9rem;line-height:1}
+.plate{align-self:flex-start;background:var(--plate);color:#1a1500;font:700 .95rem/1 "Arial Narrow","Helvetica Neue",Arial,sans-serif;letter-spacing:.08em;padding:.3rem .5rem;border-radius:4px}
+.bay small{color:var(--muted)}
+.bay .fee{font-weight:700}
+.bay form{margin-top:auto}
+.week{display:flex;gap:.5rem;align-items:flex-end;height:150px}
+.week div{flex:1;text-align:center;font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.week i{display:block;background:var(--free);border-radius:4px 4px 0 0;min-height:2px}
+</style>
+
+<div class="stats">
+  <div class="panel"><span>Free slots</span><strong>{{ s.free }} of {{ s.total }}</strong><div class="meter"><i style="width:{{ (s.parked / s.total * 100)|round }}%"></i></div></div>
+  <div class="panel"><span>Cars parked</span><strong>{{ s.parked }}</strong></div>
+  <div class="panel"><span>Collected today</span><strong>KES {{ '{:,.0f}'.format(s.today) }}</strong></div>
+  <div class="panel"><span>Collected in total</span><strong>KES {{ '{:,.0f}'.format(s.all_time) }}</strong></div>
+</div>
+
+<h2>Park a car</h2>
+<form class="panel form" method="post" action="{{ url_for('checkin') }}">
+  <div><label for="plate">Plate number</label><input id="plate" name="plate_number" required autocomplete="off" placeholder="KDA 123A"></div>
+  <div><label for="vt">Vehicle</label><select id="vt" name="vehicle_type">{% for v, r in rates.items() %}<option value="{{ v }}">{{ icons[v] }} {{ v|capitalize }} (KES {{ '%.0f'|format(r) }}/hr)</option>{% endfor %}</select></div>
+  <div><label for="dn">Driver name</label><input id="dn" name="driver_name"></div>
+  <div><label for="ph">Phone</label><input id="ph" name="phone_number" inputmode="tel"></div>
+  <div><label for="nt">Notes</label><input id="nt" name="notes"></div>
+  <button>Park car</button>
+</form>
+
+<h2>Lot map</h2>
+<div class="lot">
+{% for b in s.slots %}
+  {% if b.plate_number %}
+  <div class="bay" data-entry="{{ b.entry_time }}" data-rate="{{ b.rate }}">
+    <span class="no">{{ b.slot_id }}</span>
+    <span class="car">{{ icons.get(b.vehicle_type, '🚗') }}</span>
+    <span class="plate">{{ b.plate_number }}</span>
+    <small>{{ b.driver_name }}</small>
+    <small class="time">-</small>
+    <span class="fee">-</span>
+    <form method="post" action="{{ url_for('checkout') }}" onsubmit="return confirm('Check out {{ b.plate_number }}?')">
+      <input type="hidden" name="plate_number" value="{{ b.plate_number }}"><button class="ghost">Check out</button>
+    </form>
+  </div>
+  {% else %}
+  <div class="bay free"><span class="no">{{ b.slot_id }}</span><span class="empty">Free</span></div>
+  {% endif %}
+{% endfor %}
+</div>
+
+<h2>Collected in the last 7 days</h2>
+<div class="panel week">
+{% for w in s.week %}<div title="KES {{ '{:,.0f}'.format(w.total) }}"><i style="height:{{ w.pct }}%"></i>{{ w.day }}</div>{% endfor %}
+</div>
+
+<script>
+function tick(){
+  document.querySelectorAll('.bay[data-entry]').forEach(function(b){
+    var h=Math.max(0,(Date.now()-new Date(b.dataset.entry))/36e5), m=Math.floor(h*60);
+    b.querySelector('.time').textContent=Math.floor(m/60)+'h '+(m%60)+'m parked';
+    b.querySelector('.fee').textContent='KES '+(Math.max(1,Math.ceil(h))*b.dataset.rate).toLocaleString();
+  });
+}
+tick();setInterval(tick,15000);
+</script>
+{% endblock %}

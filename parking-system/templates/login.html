@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<form class="panel" method="post" style="max-width:340px;margin:12vh auto 0">
+  <h2 style="margin-top:0">Attendant log in</h2>
+  <label for="pw">Password</label>
+  <input id="pw" name="password" type="password" required autofocus>
+  <p><button>Log in</button></p>
+</form>
+{% endblock %}
